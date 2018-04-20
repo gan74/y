@@ -31,12 +31,11 @@ SOFTWARE.
 namespace y {
 namespace io {
 
-class File : public Reader, public Writer {
+class File final : public Reader, public Writer {
 
 	public:
 		File() = default;
-
-		virtual ~File();
+		~File();
 
 		File(File&& other);
 		File& operator=(File&& other);
@@ -48,14 +47,15 @@ class File : public Reader, public Writer {
 		usize remaining() const;
 
 		bool is_open() const;
+		bool at_end() const override;
 
-		virtual bool at_end() const override;
+		void seek(usize byte);
 
-		virtual Reader::Result read(void* data, usize bytes) override;
-		virtual void read_all(core::Vector<u8>& data) override;
+		Reader::Result read(void* data, usize bytes) override;
+		void read_all(core::Vector<u8>& data) override;
 
-		virtual Writer::Result write(const void* data, usize bytes) override;
-		virtual void flush() override;
+		Writer::Result write(const void* data, usize bytes) override;
+		void flush() override;
 
 	private:
 		File(FILE* f);
