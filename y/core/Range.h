@@ -37,7 +37,7 @@ class Range {
 		using iterator = Iter;
 		using const_iterator = const Iter;
 
-		Range(const Iter& b, const EndIter& e) : _beg(b), _end(e) {
+		Range(Iter b, EndIter e) : _beg(b), _end(e) {
 		}
 
 		template<typename Coll>
@@ -48,11 +48,11 @@ class Range {
 		Range(Coll& col) : Range(col.begin(), col.end()) {
 		}
 
-		const Iter& begin() const {
+		Iter begin() const {
 			return _beg;
 		}
 
-		const EndIter& end() const {
+		EndIter end() const {
 			return _end;
 		}
 
