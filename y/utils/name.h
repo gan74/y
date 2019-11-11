@@ -19,34 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **********************************/
-#ifndef Y_UTILS_OS_H
-#define Y_UTILS_OS_H
+#ifndef Y_UTILS_NAME_H
+#define Y_UTILS_NAME_H
 
-#include "types.h"
+#include <string_view>
 
 namespace y {
-
-namespace os {
-
-struct MemInfo {
-	u64 total;
-	u64 available;
-};
-
-struct AppTimes {
-	u64 kernel;
-	u64 user;
-};
-
-usize pid();
-MemInfo phys_mem_info();
-usize mem_usage();
-u64 get_user_time_ns();
-u64 get_kernel_time_ns();
-AppTimes get_times_ns();
-
-
+namespace detail {
+// Trick from https://github.com/Neargye/nameof
+template<typename... T>
+constexpr std::string_view ct_type_name() {
+#if defined(__clang__)
+	return std::string_view{__PRETTY_FUNCTION__ + 49, sizeof(__PRETTY_FUNCTION__) - 52};
+#elif defined(__GNUC__)
+	return std::string_view{__PRETTY_FUNCTION__ + 64, sizeof(__PRETTY_FUNCTION__) - 116};
+#elif defined(_MSC_VER)
+#warning ct_type_name is not properly supported on MSVC
+	return std::string_view{__FUNCSIG__};
+#else
+static_assert(false, "ct_type_name is not supported");
+#endif
 }
 }
 
-#endif // Y_UTILS_OS_H
+template<typename T>
+constexpr std::string_view ct_type_name() {
+	return detail::ct_type_name<T>();
+}
+
+static_assert(ct_type_name<int>() == "int");
+static_assert(ct_type_name<float>() == "float");
+static_assert(ct_type_name<std::string_view>() == "std::basic_string_view<char, std::char_traits<char> >");
+
+}
+
+
+#endif // Y_UTILS_NAME_H

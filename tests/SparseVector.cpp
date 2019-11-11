@@ -19,49 +19,61 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **********************************/
+#include <y/core/SparseVector.h>
+#include <y/test/test.h>
+#include <vector>
+#include <memory>
 
-#include "test.h"
-#include <y/utils.h>
-#include <cstring>
+namespace {
+using namespace y;
+using namespace y::core;
 
-#include <iostream>
-
-namespace y {
-namespace test {
-namespace detail {
-
-
-const char* test_box_msg(const char* msg) {
-	return msg ? msg : "unknown test function";
+y_test_func("SparseVector creation") {
+	SparseVector<void, u32> vec;
+	y_test_assert(vec.size() == 0);
+	y_test_assert(!vec.has(0));
 }
 
-void test_assert(const char* msg, void (*func)(TestResult &)) {
-	const char* ok		= "\x1b[32m  [ OK ]   \x1b[0m";
-	const char* failure = "\x1b[31m[ FAILED ] \x1b[0m";
+y_test_func("SparseVector insert even") {
+	SparseVector<void, u32> vec;
 
-	// Because of this function may be called during static initialization we must initialize cout
-	std::ios_base::Init init;
-	y::detail::setup_console();
+	const u32 max = 1024;
+	for(u32 i = 0; i != max; ++i) {
+		vec.insert(i * 2);
+	}
+	y_test_assert(vec.size() == max);
 
+	for(u32 i = 0; i != max; ++i) {
+		y_test_assert(vec.has(i * 2));
+		y_test_assert(!vec.has(i * 2 + 1));
+	}
+}
 
-	std::cout << msg << ":";
-	for(usize size = strlen(msg) + 1; size != 80 - 11; ++size) {
-		std::cout << " ";
+y_test_func("SparseVector erase even") {
+	SparseVector<void, u32> vec;
+
+	const u32 max = 1024;
+	for(u32 i = 0; i != max; ++i) {
+		vec.insert(i);
+	}
+	y_test_assert(vec.size() == max);
+
+	usize erased = 0;
+	for(u32 i = 0; i != max; ++i) {
+		y_test_assert(vec.has(i));
+		if(i % 2) {
+			vec.erase(i);
+			y_test_assert(!vec.has(i));
+			++erased;
+		}
 	}
 
+	y_test_assert(vec.size() + erased == max);
 
-	TestResult res{true, nullptr, 0};
-	func(res);
-
-	if(res.result) {
-		std::cout << ok << std::endl;
-	} else {
-		std::cout << failure << std::endl;
-		fatal("\ty_test_assert failed!", res.file, res.line);
+	for(u32 i = 0; i != max; ++i) {
+		y_test_assert(vec.has(i) == (i % 2 == 0));
 	}
-	unused(msg, func);
+}
 }
 
-}
-}
-}
+

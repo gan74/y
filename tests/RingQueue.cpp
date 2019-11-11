@@ -19,29 +19,78 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **********************************/
-
+#include <y/core/RingQueue.h>
 #include <y/test/test.h>
-#include <y/math/random.h>
+#include <vector>
+#include <memory>
 
-#include <unordered_set>
+//#include <y/core/String.h>
 
 namespace {
-
 using namespace y;
+using namespace y::core;
 
-y_test_func("FastRandom") {
-	std::unordered_set<u32> output;
-	usize max = 50000;
-	math::FastRandom rnd;
-	for(usize i = 0; i != max; ++i) {
-		output.insert(rnd());
+struct Polymorphic {
+	virtual ~Polymorphic() {
 	}
-	y_test_assert(output.size() == max);
+};
+
+struct RaiiCounter : NonCopyable {
+	RaiiCounter(usize* ptr) : counter(ptr) {
+	}
+
+	RaiiCounter(RaiiCounter&& raii) : counter(nullptr) {
+		std::swap(raii.counter, counter);
+	}
+
+	~RaiiCounter() {
+		if(counter) {
+			++(*counter);
+		}
+	}
+
+	usize* counter;
+};
+
+y_test_func("RingQueue creation") {
+	usize cap = 256;
+	RingQueue<int> q(cap);
+	y_test_assert(q.size() == 0);
+	y_test_assert(q.capacity() == cap);
 }
 
-y_test_func("FastRandom zero seed") {
-	math::FastRandom rnd(0);
-	y_test_assert(rnd() != 0);
+y_test_func("RingQueue push/pop") {
+	usize cap = 256;
+	RingQueue<usize> q(cap);
+
+	for(usize i = 0; i != cap / 2; ++i) {
+		q.push(i);
+		y_test_assert(q.last() == i);
+		y_test_assert(q.size() == i + 1);
+	}
+	for(usize i = 0; i != cap / 2; ++i) {
+		y_test_assert(q.pop() == i);
+	}
+}
+
+y_test_func("RingQueue full") {
+	usize cap = 256;
+	RingQueue<usize> q(cap);
+	y_test_assert(q.is_empty());
+
+	for(usize i = 0; i != cap; ++i) {
+		q.push(i);
+	}
+
+	y_test_assert(!q.is_empty());
+	y_test_assert(q.is_full());
+	y_test_assert(q.size() == cap);
+
+	for(usize i = 0; i != cap; ++i) {
+		y_test_assert(q.pop() == i);
+	}
 }
 
 }
+
+

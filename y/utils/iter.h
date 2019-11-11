@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2019 Gr�goire Angerand
+Copyright (c) 2016-2019 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,19 +19,65 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **********************************/
-#ifndef Y_CORE_ARRAYVIEW_H
-#define Y_CORE_ARRAYVIEW_H
+#ifndef Y_UTILS_ITER_H
+#define Y_UTILS_ITER_H
 
-#include "Span.h"
+#include "types.h"
 
 namespace y {
-namespace core {
 
+template<usize I, typename It>
+class TupleMemberIterator {
+	using iterator_type = It;
 
-template<typename T>
-using ArrayView = Span<T>;
+	public:
+		TupleMemberIterator(iterator_type it) : _it(it) {
+		}
+
+		TupleMemberIterator& operator++() {
+			++_it;
+			return *this;
+		}
+
+		TupleMemberIterator operator++(int) {
+			iterator_type it = _it;
+			++_it;
+			return TupleMemberIterator(it);
+		}
+
+		TupleMemberIterator& operator--() {
+			--_it;
+			return *this;
+		}
+
+		TupleMemberIterator operator--(int) {
+			iterator_type it = _it;
+			--_it;
+			return TupleMemberIterator(it);
+		}
+
+		bool operator==(const TupleMemberIterator& other) const {
+			return _it == other._it;
+		}
+
+		bool operator!=(const TupleMemberIterator& other) const {
+			return _it != other._it;
+		}
+
+		auto&& operator*() const {
+			return std::get<I>(*_it);
+		}
+
+		auto* operator->() const {
+			return &std::get<I>(*_it);
+		}
+
+	private:
+		iterator_type _it;
+};
+
 
 }
-}
 
-#endif // Y_CORE_ARRAYVIEW_H
+
+#endif // Y_UTILS_ITER_H

@@ -19,16 +19,49 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **********************************/
-#ifndef Y_UTILS_OS_LINUX_H
-#define Y_UTILS_OS_LINUX_H
+#ifndef Y_SERDE3_CONVERSIONS_H
+#define Y_SERDE3_CONVERSIONS_H
 
-#include <y/defines.h>
-#include "types.h"
+#include "headers.h"
+#include "result.h"
 
-#ifdef Y_OS_LINUX
+#define y_serde3_try_convert(prim)														\
+	do {																				\
+	    if constexpr(std::is_convertible_v<prim, T>) {									\
+	        static constexpr auto type_hash = detail::header_type_hash<prim>();			\
+	        if(type_hash == type.type_hash) {											\
+	            t = T(*static_cast<const prim*>(data));									\
+	            return core::Ok(Success::Full);											\
+	        }																			\
+	    }																				\
+	} while(false)
 
-#include <sys/types.h>
-#include <unistd.h>
+namespace y {
+namespace serde3 {
 
-#endif // Y_OS_LINUX
-#endif // Y_UTILS_OS_LINUX_H
+template<typename T>
+Result try_convert(T& t, detail::TypeHeader type, const void* data) {
+	unused(t, type, data);
+
+	y_serde3_try_convert(u8);
+	y_serde3_try_convert(u16);
+	y_serde3_try_convert(u32);
+	y_serde3_try_convert(u64);
+
+	y_serde3_try_convert(i8);
+	y_serde3_try_convert(i16);
+	y_serde3_try_convert(i32);
+	y_serde3_try_convert(i64);
+
+	y_serde3_try_convert(float);
+	y_serde3_try_convert(double);
+
+	return core::Ok(Success::Partial);
+}
+
+}
+}
+
+#undef y_serde3_try_convert
+
+#endif // Y_SERDE3_CONVERSIONS_H
